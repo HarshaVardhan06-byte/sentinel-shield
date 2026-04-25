@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusTech SOC | Admin WAF Console</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b1120;
+            --surface: #1e293b;
+            --border: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --green: #22c55e;
+            --red: #ef4444;
+            --orange: #f97316;
+            --blue: #3b82f6;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            background: #0f172a;
+            border-bottom: 1px solid var(--border);
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--blue);
+            font-weight: 800;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-badge {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--green);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .status-badge.critical {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--red);
+            border-color: rgba(239, 68, 68, 0.3);
+            animation: pulse 1s infinite alternate;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            padding: 20px;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            background: #141e30;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-content {
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .alert-green {
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 4px solid var(--green);
+        }
+
+        .alert-red {
+            background: rgba(239, 68, 68, 0.15);
+            border-left: 4px solid var(--red);
+            border-right: 1px solid var(--red);
+            border-top: 1px solid var(--red);
+            border-bottom: 1px solid var(--red);
+            animation: slideIn 0.3s ease-out, emergencyFlash 1.5s infinite alternate;
+        }
+        
+        .alert-orange {
+            background: rgba(249, 115, 22, 0.1);
+            border-left: 4px solid var(--orange);
+        }
+
+        .alert-icon { font-size: 1.5rem; }
+        .alert-time { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; }
+        .alert-title { font-weight: 600; margin-bottom: 5px; }
+        .alert-msg { font-size: 0.9rem; color: #cbd5e1; }
+
+        /* Standard Logs */
+        .std-log {
+            padding: 8px 12px;
+            border-bottom: 1px dashed var(--border);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            animation: slideIn 0.2s ease-out;
+        }
+
+        /* Actions */
+        .action-card {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .btn-kill {
+            background: var(--red);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+            transition: all 0.2s;
+        }
+
+        .btn-kill:hover { background: #dc2626; box-shadow: 0 0 25px rgba(239, 68, 68, 0.8); transform: scale(1.02); }
+        .btn-kill:disabled { background: #475569; box-shadow: none; cursor: not-allowed; transform: none; }
+
+        @keyframes pulse { from { opacity: 0.8; } to { opacity: 1; } }
+        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes emergencyFlash { from { box-shadow: 0 0 5px rgba(239,68,68,0.2); } to { box-shadow: 0 0 20px rgba(239,68,68,0.6); } }
+
+        /* Metrics */
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--border);
+        }
+        .metric span:last-child { font-weight: bold; color: var(--blue); }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🛡️ NexusTech WAF & SOC Control</h1>
+        <div class="status-badge" id="globalStatus">SYSTEM SECURE</div>
+    </header>
+
+    <div class="dashboard">
+        <!-- Main Alert Feed -->
+        <div class="panel">
+            <div class="panel-header">
+                <span>GLOBAL INCIDENT & TRAFFIC FEED</span>
+                <span style="color: var(--text-muted); font-size: 0.85rem;" id="lastUpdate">Live</span>
+            </div>
+            <div class="panel-content" id="alertFeed">
+                <div style="text-align: center; color: var(--text-muted); padding: 40px;" id="waitingMsg">
+                    Listening for network and authentication events...
+                </div>
+            </div>
+        </div>
+
+        <!-- Threat Response Controls -->
+        <div class="panel">
+            <div class="panel-header">
+                <span>THREAT RESPONSE</span>
+            </div>
+            <div class="panel-content">
+                
+                <div class="action-card">
+                    <h3 style="margin-top:0; color: var(--red);">EMERGENCY PROTOCOL</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+                        Sever all hacker connections, block their IP, and prevent them from interacting with user data.
+                    </p>
+                    <button class="btn-kill" id="killBtn" onclick="killHackerConnection()">BLOCK HACKER CONNECTION</button>
+                </div>
+
+                <div class="action-card" style="background: transparent; border-color: var(--border);">
+                    <h3 style="margin-top:0;">Traffic Analysis</h3>
+                    <div class="metric"><span>Total Events</span> <span id="m-total">0</span></div>
+                    <div class="metric"><span>Logins Analyzed</span> <span id="m-logins">0</span></div>
+                    <div class="metric"><span>Legitimate Access</span> <span id="m-legit" style="color: var(--green);">0</span></div>
+                    <div class="metric"><span>Compromised Attempts</span> <span id="m-hacked" style="color: var(--red);">0</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let processedTimestamps = new Set();
+        let totalEvents = 0;
+        
+        // Sync button state on load
+        if (localStorage.getItem('hacker_blocked') === 'true') {
+            const btn = document.getElementById('killBtn');
+            btn.disabled = true;
+            btn.innerText = "HACKER BLOCKED";
+            btn.style.background = "#475569";
+            document.getElementById('globalStatus').innerText = "THREAT MITIGATED";
+        }
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'app_network_logs') {
+                analyzeLogs();
+            }
+        });
+
+        function analyzeLogs() {
+            const logs = JSON.parse(localStorage.getItem('app_network_logs') || '[]');
+            const container = document.getElementById('alertFeed');
+            const waiting = document.getElementById('waitingMsg');
+            if (waiting) waiting.remove();
+            
+            logs.forEach(log => {
+                // Prevent duplicate processing
+                const uniqueId = log.timestamp + log.actor + log.details;
+                if (processedTimestamps.has(uniqueId)) return;
+                processedTimestamps.add(uniqueId);
+                
+                totalEvents++;
+                document.getElementById('m-total').innerText = totalEvents;
+
+                // Handle Login Attempts
+                if (log.action === 'POST' && log.endpoint === '/api/auth/login') {
+                    document.getElementById('m-logins').innerText = parseInt(document.getElementById('m-logins').innerText) + 1;
+                    
+                    let usernameMatch = log.details.match(/username=([^&]+)/);
+                    let extractedUser = usernameMatch ? usernameMatch[1] : 'Unknown';
+
+                    if (log.actor !== 'Hacker') { // User login
+                        createAlert(log, 'green', 'Authorized Access', `Legitimate user <b>${extractedUser}</b> successfully logged in from trusted IP (${log.ip}).`);
+                        document.getElementById('m-legit').innerText = parseInt(document.getElementById('m-legit').innerText) + 1;
+                    } else { // Hacker login using stolen credentials
+                        createAlert(log, 'red', 'EMERGENCY: COMPROMISED CREDENTIALS', `<b>CRITICAL:</b> Attacker logged in using stolen credentials for user <b>${extractedUser}</b> from unverified IP (${log.ip})! Insider threat protocol triggered.`);
+                        document.getElementById('m-hacked').innerText = parseInt(document.getElementById('m-hacked').innerText) + 1;
+                        
+                        const status = document.getElementById('globalStatus');
+                        status.className = "status-badge critical";
+                        status.innerText = "BREACH DETECTED";
+                    }
+                } 
+                // Handle Malicious Payloads / Exploits from Hacker
+                else if (log.actor === 'Hacker') {
+                    createAlert(log, 'orange', 'MALICIOUS ACTIVITY DETECTED', `Hacker executed exploit targeting <b>${log.endpoint}</b>. Payload/Details: ${log.details}`);
+                }
+                // Handle Normal User Browsing (Products, Cart, etc)
+                else {
+                    createStandardLog(log);
+                }
+            });
+        }
+
+        function createAlert(log, type, title, msg) {
+            const container = document.getElementById('alertFeed');
+            const alert = document.createElement('div');
+            
+            let icon, className;
+            if (type === 'green') { className = 'alert alert-green'; icon = '✅'; }
+            else if (type === 'red') { className = 'alert alert-red'; icon = '🚨'; }
+            else { className = 'alert alert-orange'; icon = '⚠️'; }
+
+            alert.className = className;
+            alert.innerHTML = `
+                <div class="alert-icon">${icon}</div>
+                <div>
+                    <div class="alert-time">${log.timestamp} | Source: ${log.ip}</div>
+                    <div class="alert-title">${title}</div>
+                    <div class="alert-msg">${msg}</div>
+                </div>
+            `;
+            container.prepend(alert);
+        }
+
+        function createStandardLog(log) {
+            const container = document.getElementById('alertFeed');
+            const entry = document.createElement('div');
+            entry.className = 'std-log';
+            entry.innerHTML = `
+                <span style="color: #cbd5e1">[${log.timestamp}]</span> 
+                <span style="color: #3b82f6; font-weight: bold;">[${log.actor}]</span> 
+                <span style="color: #e2e8f0; margin-left: 10px;">${log.action}</span> 
+                <span style="color: var(--green)">${log.endpoint}</span>
+                <span style="margin-left: 10px;">- ${log.details}</span>
+            `;
+            container.prepend(entry);
+        }
+
+        function killHackerConnection() {
+            localStorage.setItem('hacker_blocked', 'true');
+            const btn = document.getElementById('killBtn');
+            btn.disabled = true;
+            btn.innerText = "HACKER BLOCKED";
+            btn.style.background = "#475569";
+            
+            const status = document.getElementById('globalStatus');
+            status.className = "status-badge";
+            status.innerText = "THREAT MITIGATED";
+            status.style.color = "var(--text)";
+            status.style.borderColor = "var(--border)";
+            status.style.background = "var(--surface)";
+
+            // Add an alert to the feed confirming the block
+            const log = { timestamp: new Date().toLocaleTimeString(), ip: 'SYSTEM' };
+            createAlert(log, 'green', 'WAF RULE APPLIED', 'Hacker IP has been permanently blacklisted. Their session is severed and all incoming exploit requests will be dropped.');
+            
+            alert("SUCCESS! The hacker's connection has been completely severed. They can no longer interact with the network or sniff user traffic.");
+        }
+
+        // Run once on load to catch existing logs
+        analyzeLogs();
+    </script>
+</body>
+</html>

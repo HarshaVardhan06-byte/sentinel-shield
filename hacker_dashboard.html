@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShadowNet | Attacker Terminal</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --terminal-green: #00ff00;
+            --terminal-red: #ff3333;
+            --terminal-dim: #004400;
+            --border: #113311;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--bg);
+            color: var(--terminal-green);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        #login-screen {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .hacker-logo {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px var(--terminal-green);
+            animation: glitch 1s linear infinite;
+        }
+
+        @keyframes glitch {
+            2%, 64% { transform: translate(2px,0) skew(0deg); }
+            4%, 60% { transform: translate(-2px,0) skew(0deg); }
+            62% { transform: translate(0,0) skew(5deg); }
+        }
+
+        .login-box {
+            border: 1px solid var(--terminal-green);
+            padding: 30px;
+            background: rgba(0,255,0,0.05);
+            box-shadow: 0 0 20px rgba(0,255,0,0.1);
+            width: 450px;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+            justify-content: space-between;
+        }
+
+        .input-group span { margin-right: 15px; font-weight: bold; }
+        
+        input[type="text"], input[type="password"] {
+            background: transparent;
+            border: none;
+            color: var(--terminal-green);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.1rem;
+            outline: none;
+            width: 200px;
+            border-bottom: 1px solid var(--terminal-dim);
+        }
+
+        #dashboard-screen {
+            display: none;
+            flex-grow: 1;
+            padding: 20px;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 20px;
+            z-index: 10;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        header {
+            grid-column: 1 / -1;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .panel {
+            border: 1px solid var(--border);
+            background: rgba(0, 10, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: var(--border);
+            padding: 8px 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .panel-content {
+            padding: 15px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .log-entry { margin-bottom: 8px; font-size: 0.9rem; line-height: 1.4; word-wrap: break-word; }
+        .log-time { color: #888; }
+        .log-actor { color: #aaa; font-weight: bold; }
+        .log-method { color: #ffaa00; }
+        .log-endpoint { color: #00ccff; }
+
+        .log-entry.intercepted { border-left: 2px solid var(--terminal-green); padding-left: 10px; }
+        .log-entry.attack { border-left: 2px solid var(--terminal-red); padding-left: 10px; color: var(--terminal-red); }
+
+        .exploit-group { border: 1px solid var(--border); padding: 15px; margin-bottom: 15px; }
+        .exploit-group h3 { margin: 0 0 10px 0; color: #fff; font-size: 1rem; }
+
+        select {
+            background: #000; color: var(--terminal-green); border: 1px solid var(--border);
+            padding: 8px; font-family: inherit; width: 100%; margin-bottom: 10px; box-sizing: border-box; outline: none;
+        }
+
+        .btn {
+            background: #111; color: var(--terminal-red); border: 1px solid var(--terminal-red);
+            padding: 10px; font-family: inherit; font-weight: bold; cursor: pointer; width: 100%; transition: all 0.2s;
+        }
+
+        .btn:hover { background: var(--terminal-red); color: #000; box-shadow: 0 0 15px var(--terminal-red); }
+        .btn:disabled { background: #333; color: #666; border-color: #666; box-shadow: none; cursor: not-allowed; }
+
+        .waf-alert { color: var(--terminal-red); font-weight: bold; margin-top: 10px; animation: blink 1s infinite; }
+        @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0.3; } }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: var(--border); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--terminal-green); }
+
+        #blockOverlay {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 0, 0, 0.15);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--terminal-red);
+            text-align: center;
+        }
+        #blockOverlay h1 { font-size: 4rem; margin: 0; text-shadow: 0 0 20px red; }
+        #blockOverlay p { font-size: 1.5rem; background: #000; padding: 10px; border: 1px solid red;}
+    </style>
+</head>
+<body>
+
+    <div id="blockOverlay">
+        <h1>CONNECTION SEVERED</h1>
+        <p>FATAL ERROR: Target WAF has permanently blacklisted your IP address.</p>
+    </div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen">
+        <div class="hacker-logo">SHADOW_NET</div>
+        <div class="login-box">
+            <div>Initialize connection to C2 server...</div>
+            <div style="margin-bottom: 20px;">Status: <span style="color: yellow">AWAITING CREDENTIALS</span></div>
+            
+            <div style="color: #888; font-size: 0.9rem; margin-bottom: 10px;">
+                > INTERCEPTED USERNAME REQUIRED FOR PRIVILEGE ESCALATION
+            </div>
+            
+            <div class="input-group">
+                <span>Target Username:</span>
+                <input type="text" id="targetUser" autocomplete="off" placeholder="Enter sniffed user">
+            </div>
+            <div class="input-group">
+                <span>Target Password:</span>
+                <input type="password" id="targetPass" onkeypress="if(event.key === 'Enter') handleLogin()" placeholder="Any password works">
+            </div>
+            
+            <button class="btn" style="margin-top: 25px;" onclick="handleLogin()">BYPASS AUTHENTICATION</button>
+        </div>
+    </div>
+
+    <!-- DASHBOARD SCREEN -->
+    <div id="dashboard-screen">
+        <header>
+            <div>SHADOW_NET EXPLOIT FRAMEWORK v4.2.1</div>
+            <div>TARGET: <span style="color: #00ccff">http://nexustech-store.local</span></div>
+            <div id="clock">00:00:00</div>
+        </header>
+
+        <div class="panel">
+            <div class="panel-header">
+                <span>[LIVE] PACKET SNIFFER</span>
+                <span id="packetCount">Packets: 0</span>
+            </div>
+            <div class="panel-content" id="snifferContent">
+                <div style="color: #555;">Waiting for user traffic...</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <span>EXPLOIT MODULES</span>
+            </div>
+            <div class="panel-content">
+                
+                <div class="exploit-group">
+                    <h3>1. SQL Injection (Payload Attack)</h3>
+                    <select id="sqliPayload">
+                        <option value="' OR '1'='1">Authentication Bypass (' OR '1'='1)</option>
+                        <option value="UNION SELECT username, password FROM users">Data Exfiltration (UNION SELECT...)</option>
+                    </select>
+                    <button class="btn" onclick="launchAttack('SQL_INJECTION')">EXECUTE SQLi</button>
+                </div>
+
+                <div class="exploit-group">
+                    <h3>2. Layer 7 DDoS</h3>
+                    <div style="font-size: 0.85rem; color: #888; margin-bottom: 10px;">Floods the endpoint with rapid automated requests.</div>
+                    <button class="btn" onclick="launchAttack('DDOS_SPAM')">START HTTP FLOOD</button>
+                </div>
+
+                <div class="panel-header" style="margin-top: 20px; background: #311; color: var(--terminal-red);">
+                    TARGET WAF RESPONSE LOG
+                </div>
+                <div id="wafResponseBox" style="padding: 10px; border: 1px solid #311; margin-top: 10px; min-height: 100px;">
+                    <div style="color: #555;">No WAF responses intercepted yet.</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }, 1000);
+
+        function checkBlockStatus() {
+            if (localStorage.getItem('hacker_blocked') === 'true') {
+                document.getElementById('blockOverlay').style.display = 'flex';
+                document.querySelectorAll('.btn').forEach(b => b.disabled = true);
+                return true;
+            }
+            return false;
+        }
+
+        // Check immediately
+        checkBlockStatus();
+
+        function handleLogin() {
+            if (checkBlockStatus()) return;
+
+            const user = document.getElementById('targetUser').value;
+            const pass = document.getElementById('targetPass').value;
+            
+            if(!user) {
+                alert("You must enter a target username to spoof their identity!");
+                return;
+            }
+
+            // Write the spoofed login to the network log
+            writeNetworkLog('POST', '/api/auth/login', `username=${user}&password=${pass}`);
+
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('dashboard-screen').style.display = 'grid';
+            loadSniffer();
+        }
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'app_network_logs') loadSniffer();
+            if (e.key === 'hacker_blocked') checkBlockStatus();
+        });
+
+        function loadSniffer() {
+            if (checkBlockStatus()) return; // Stop sniffing if blocked
+
+            const logs = JSON.parse(localStorage.getItem('app_network_logs') || '[]');
+            const container = document.getElementById('snifferContent');
+            
+            if (logs.length === 0) return;
+            document.getElementById('packetCount').innerText = `Packets: ${logs.length}`;
+            
+            let html = '';
+            [...logs].reverse().forEach(log => {
+                const isAttack = log.actor === 'Hacker';
+                const rowClass = isAttack ? 'log-entry attack' : 'log-entry intercepted';
+                
+                html += `
+                    <div class="${rowClass}">
+                        <span class="log-time">[${log.timestamp}]</span>
+                        <span class="log-actor">${log.actor}</span> | 
+                        <span class="log-method">${log.action}</span> 
+                        <span class="log-endpoint">${log.endpoint}</span>
+                        <div style="color: #888; margin-top: 2px;">Data: ${log.details}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        let threatScore = 0; 
+
+        function writeNetworkLog(action, endpoint, details) {
+            if (checkBlockStatus()) return;
+
+            const logs = JSON.parse(localStorage.getItem('app_network_logs') || '[]');
+            logs.push({
+                timestamp: new Date().toLocaleTimeString(),
+                actor: 'Hacker',
+                action: action,
+                endpoint: endpoint,
+                details: details,
+                ip: '10.0.0.99'
+            });
+            if(logs.length > 50) logs.shift();
+            localStorage.setItem('app_network_logs', JSON.stringify(logs));
+            loadSniffer();
+        }
+
+        function logWafResponse(action, reason, score) {
+            const box = document.getElementById('wafResponseBox');
+            const time = new Date().toLocaleTimeString();
+            
+            if(box.innerHTML.includes("No WAF responses")) box.innerHTML = '';
+
+            const entry = document.createElement('div');
+            entry.style.marginBottom = '10px';
+            
+            if (action === 'BLOCK') {
+                entry.innerHTML = `<span class="waf-alert">[${time}] 🚫 WAF INTERVENTION: BLOCKED</span><br>
+                                   <span style="color:#aaa">Reason: ${reason} (Score: ${score}/60)</span>`;
+            } else {
+                entry.innerHTML = `<span style="color:var(--terminal-green)">[${time}] ✅ WAF BYPASSED: ALLOWED</span><br>
+                                   <span style="color:#aaa">Reason: ${reason} (Score: ${score}/60)</span>`;
+            }
+            box.prepend(entry);
+        }
+
+        function launchAttack(type) {
+            if (checkBlockStatus()) return;
+
+            if (type === 'SQL_INJECTION') {
+                const payload = document.getElementById('sqliPayload').value;
+                writeNetworkLog('POST', '/api/users/search', `payload=${payload}`);
+                setTimeout(() => logWafResponse('BLOCK', 'ML Model Detected Malicious Payload', 0), 600);
+            }
+            else if (type === 'DDOS_SPAM') {
+                let count = 0;
+                const interval = setInterval(() => {
+                    if (checkBlockStatus()) { clearInterval(interval); return; }
+                    writeNetworkLog('GET', '/api/products', 'Flood request');
+                    count++;
+                    if(count === 25) {
+                        clearInterval(interval);
+                        setTimeout(() => {
+                            logWafResponse('BLOCK', 'Rate Limit Exceeded. Action required by Admin SOC.', 60);
+                        }, 500);
+                    }
+                }, 50);
+            }
+        }
+    </script>
+</body>
+</html>

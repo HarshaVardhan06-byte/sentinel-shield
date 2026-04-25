@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Control | NexusTech vs ShadowNet</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: #0b0f19;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #151a25;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2a3441;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            color: #8b949e;
+        }
+        .header h1 span { color: #fff; }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-user { background: #1a73e8; color: white; }
+        .btn-hacker { background: #00cc00; color: #000; }
+        .btn-admin { background: #ef4444; color: white; }
+        .btn-split { background: #2a3441; color: white; border: 1px solid #444; }
+        .btn:hover { filter: brightness(1.2); }
+
+        .container {
+            flex-grow: 1;
+            display: flex;
+            width: 100%;
+            background: #000;
+        }
+
+        .frame-wrapper {
+            position: relative;
+            flex-grow: 1;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .divider {
+            width: 4px;
+            background: #2a3441;
+            z-index: 5;
+        }
+
+        .overlay-label {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 20;
+        }
+        
+        #label-user { color: #1a73e8; border: 1px solid #1a73e8; }
+        #label-hacker { color: #00ff00; border: 1px solid #00ff00; }
+        #label-admin { color: #ef4444; border: 1px solid #ef4444; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1><span>NEXUS</span> </h1>
+        <div class="controls">
+            <button class="btn btn-user" onclick="setView('user')">🖥️ User</button>
+            <button class="btn btn-hacker" onclick="setView('hacker')">🥷 Hacker</button>
+            <button class="btn btn-admin" onclick="setView('admin')">🛡️ Admin SOC</button>
+            <button class="btn btn-split" onclick="setView('split2')">🌗 2-Way Split</button>
+            <button class="btn btn-split" onclick="setView('split3')">🎛️ 3-Way Split</button>
+            <button class="btn btn-split" style="background: #aa0000; color: white; margin-left: 10px;" onclick="clearLogs()">🗑️ Reset All</button>
+        </div>
+    </div>
+
+    <div class="container" id="frameContainer">
+        <div class="frame-wrapper" id="frame-user" style="width: 33.33%;">
+            <div class="overlay-label" id="label-user">USER</div>
+            <iframe src="user_dashboard.html"></iframe>
+        </div>
+        
+        <div class="divider" id="div1"></div>
+
+        <div class="frame-wrapper" id="frame-hacker" style="width: 33.33%;">
+            <div class="overlay-label" id="label-hacker">HACKER</div>
+            <iframe src="hacker_dashboard.html"></iframe>
+        </div>
+
+        <div class="divider" id="div2"></div>
+
+        <div class="frame-wrapper" id="frame-admin" style="width: 33.33%;">
+            <div class="overlay-label" id="label-admin">ADMIN SOC</div>
+            <iframe src="admin_dashboard.html"></iframe>
+        </div>
+    </div>
+
+    <script>
+        function setView(mode) {
+            const user = document.getElementById('frame-user');
+            const hacker = document.getElementById('frame-hacker');
+            const admin = document.getElementById('frame-admin');
+            const div1 = document.getElementById('div1');
+            const div2 = document.getElementById('div2');
+
+            // Hide all first
+            [user, hacker, admin, div1, div2].forEach(el => el.style.display = 'none');
+
+            if (mode === 'user') {
+                user.style.width = '100%'; user.style.display = 'block';
+            } else if (mode === 'hacker') {
+                hacker.style.width = '100%'; hacker.style.display = 'block';
+            } else if (mode === 'admin') {
+                admin.style.width = '100%'; admin.style.display = 'block';
+            } else if (mode === 'split2') {
+                user.style.width = '50%'; user.style.display = 'block';
+                hacker.style.width = '50%'; hacker.style.display = 'block';
+                div1.style.display = 'block';
+            } else if (mode === 'split3') {
+                user.style.width = '33.33%'; user.style.display = 'block';
+                hacker.style.width = '33.33%'; hacker.style.display = 'block';
+                admin.style.width = '33.33%'; admin.style.display = 'block';
+                div1.style.display = 'block';
+                div2.style.display = 'block';
+            }
+        }
+
+        function clearLogs() {
+            localStorage.removeItem('app_network_logs');
+            localStorage.removeItem('hacker_blocked');
+            alert("Simulation Reset! All logs cleared and connections restored.");
+            document.querySelectorAll('iframe').forEach(f => f.contentWindow.location.reload());
+        }
+
+        // Start in 3-way split
+        setView('split3');
+    </script>
+</body>
+</html>

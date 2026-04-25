@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusTech Store | User Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --bg: #f8f9fa;
+            --surface: #ffffff;
+            --text: #202124;
+            --text-secondary: #5f6368;
+            --border: #dadce0;
+        }
+
+        body {
+            font-family: 'Google Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            transition: all 0.3s ease;
+        }
+
+        /* Login Screen */
+        #login-screen {
+            display: flex;
+            height: 100vh;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e8eaed 100%);
+        }
+
+        .login-card {
+            background: var(--surface);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-card h2 { margin-bottom: 8px; font-weight: 500; }
+        .login-card p { color: var(--text-secondary); margin-bottom: 24px; }
+
+        .auth-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+            font-family: inherit;
+        }
+        
+        .auth-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 20px 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border); }
+        .divider span { padding: 0 10px; }
+
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background 0.2s;
+            box-sizing: border-box;
+        }
+
+        .google-btn:hover { background: #f1f3f4; }
+        .google-btn img { width: 24px; }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+            gap: 10px;
+            justify-content: flex-start;
+            color: var(--text-secondary);
+        }
+
+        /* Dashboard */
+        #dashboard-screen { display: none; }
+
+        .navbar {
+            background: var(--surface);
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo { font-size: 24px; font-weight: 700; color: var(--primary); }
+        
+        .nav-links { display: flex; gap: 30px; align-items: center; }
+        .nav-link { cursor: pointer; color: var(--text-secondary); font-weight: 500; transition: color 0.2s;}
+        .nav-link:hover, .nav-link.active { color: var(--primary); }
+
+        .user-avatar {
+            width: 40px; height: 40px;
+            background: var(--primary); color: white;
+            border-radius: 50%; display: flex;
+            align-items: center; justify-content: center;
+            font-weight: bold; cursor: pointer;
+        }
+
+        /* Content Area */
+        .content { padding: 40px; max-width: 1200px; margin: 0 auto; }
+        
+        /* Products Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 24px;
+        }
+
+        .product-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-align: center;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+        }
+
+        .product-icon { font-size: 50px; margin-bottom: 16px; }
+        .product-title { font-size: 18px; font-weight: 500; margin-bottom: 8px; }
+        .product-price { color: var(--text-secondary); margin-bottom: 20px; font-weight: bold; }
+
+        .btn-primary {
+            background: var(--primary); color: white;
+            border: none; padding: 12px 20px;
+            border-radius: 8px; font-weight: 500; font-size: 16px;
+            cursor: pointer; width: 100%; transition: background 0.2s;
+            box-sizing: border-box;
+        }
+        .btn-primary:hover { background: #1557b0; }
+
+        /* Sections */
+        .section { display: none; animation: fadeIn 0.3s ease; }
+        .section.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Profile & Cart styling */
+        .panel-card {
+            background: var(--surface); padding: 30px;
+            border-radius: 12px; border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        /* Toast */
+        #toast {
+            position: fixed; bottom: 30px; right: 30px;
+            background: #323232; color: white; padding: 12px 24px;
+            border-radius: 8px; transform: translateY(100px);
+            transition: transform 0.3s; z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen">
+        <div class="login-card">
+            <h2>Sign in to NexusTech</h2>
+            <p>Access your shopping dashboard</p>
+            
+            <input type="text" id="usernameInput" class="auth-input" placeholder="Username (e.g., johndoe)">
+            <input type="password" id="passwordInput" class="auth-input" placeholder="Password">
+            
+            <div class="checkbox-container">
+                <input type="checkbox" id="rememberMe" checked>
+                <label for="rememberMe">Keep me signed in</label>
+            </div>
+            
+            <button class="btn-primary" onclick="handleStandardLogin()">Sign In</button>
+
+            <div class="divider"><span>OR</span></div>
+
+            <button class="google-btn" onclick="handleGmailLogin()">
+                <svg viewBox="0 0 48 48" style="width: 24px; height: 24px;">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                </svg>
+                Sign in with Gmail
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <div id="dashboard-screen">
+        <nav class="navbar">
+            <div class="logo">NexusTech</div>
+            <div class="nav-links">
+                <span class="nav-link active" onclick="switchTab('products')">Products</span>
+                <span class="nav-link" onclick="switchTab('cart')">Cart (<span id="cartCount">0</span>)</span>
+                <span class="nav-link" onclick="switchTab('profile')">Profile</span>
+                <div class="user-avatar" onclick="handleLogout()">U</div>
+            </div>
+        </nav>
+
+        <div class="content">
+            <!-- Products Section -->
+            <div id="products-section" class="section active">
+                <h2 style="margin-bottom: 24px;">Featured Products</h2>
+                <div class="products-grid">
+                    <div class="product-card">
+                        <div class="product-icon">💻</div>
+                        <h3 class="product-title">NexusBook Pro</h3>
+                        <p class="product-price">$1,299.00</p>
+                        <button class="btn-primary" onclick="addToCart('NexusBook Pro', 1299)">Add to Cart</button>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-icon">📱</div>
+                        <h3 class="product-title">NexusPhone X</h3>
+                        <p class="product-price">$799.00</p>
+                        <button class="btn-primary" onclick="addToCart('NexusPhone X', 799)">Add to Cart</button>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-icon">🎧</div>
+                        <h3 class="product-title">AudioPods Max</h3>
+                        <p class="product-price">$249.00</p>
+                        <button class="btn-primary" onclick="addToCart('AudioPods Max', 249)">Add to Cart</button>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-icon">⌚</div>
+                        <h3 class="product-title">Nexus Watch 3</h3>
+                        <p class="product-price">$299.00</p>
+                        <button class="btn-primary" onclick="addToCart('Nexus Watch 3', 299)">Add to Cart</button>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-icon">🎮</div>
+                        <h3 class="product-title">Nexus Station 5</h3>
+                        <p class="product-price">$499.00</p>
+                        <button class="btn-primary" onclick="addToCart('Nexus Station 5', 499)">Add to Cart</button>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-icon">📺</div>
+                        <h3 class="product-title">Ultra HD Smart TV</h3>
+                        <p class="product-price">$899.00</p>
+                        <button class="btn-primary" onclick="addToCart('Ultra HD Smart TV', 899)">Add to Cart</button>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-icon">🔋</div>
+                        <h3 class="product-title">Wireless Charger</h3>
+                        <p class="product-price">$49.00</p>
+                        <button class="btn-primary" onclick="addToCart('Wireless Charger', 49)">Add to Cart</button>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-icon">🏠</div>
+                        <h3 class="product-title">Smart Home Hub</h3>
+                        <p class="product-price">$129.00</p>
+                        <button class="btn-primary" onclick="addToCart('Smart Home Hub', 129)">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cart Section -->
+            <div id="cart-section" class="section">
+                <h2>Your Shopping Cart</h2>
+                <div class="panel-card" id="cartItems">
+                    <p style="color: var(--text-secondary)">Your cart is empty.</p>
+                </div>
+                <button class="btn-primary" style="width: auto; padding: 12px 30px;" onclick="checkout()">Proceed to Checkout</button>
+            </div>
+
+            <!-- Profile Section -->
+            <div id="profile-section" class="section">
+                <h2>User Profile</h2>
+                <div class="panel-card">
+                    <h3 id="profileName">User</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">Standard Account</p>
+                    
+                    <div style="border-top: 1px solid var(--border); padding-top: 20px;">
+                        <p><strong>Role:</strong> Standard User</p>
+                        <p><strong>Account Status:</strong> Active</p>
+                        <p><strong>Last Login:</strong> <span id="lastLoginTime">Just now</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">Action recorded</div>
+
+    <script>
+        let cart = [];
+        let currentUser = 'Guest';
+
+        if(!localStorage.getItem('app_network_logs')) {
+            localStorage.setItem('app_network_logs', JSON.stringify([]));
+        }
+
+        function logNetworkEvent(action, endpoint, details) {
+            const logs = JSON.parse(localStorage.getItem('app_network_logs') || '[]');
+            logs.push({
+                timestamp: new Date().toLocaleTimeString(),
+                actor: currentUser,
+                action: action,
+                endpoint: endpoint,
+                details: details,
+                ip: '192.168.1.100'
+            });
+            if(logs.length > 50) logs.shift();
+            localStorage.setItem('app_network_logs', JSON.stringify(logs));
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.transform = 'translateY(0)';
+            setTimeout(() => { toast.style.transform = 'translateY(100px)'; }, 3000);
+        }
+
+        function handleStandardLogin() {
+            const user = document.getElementById('usernameInput').value || 'anonymous';
+            const pass = document.getElementById('passwordInput').value || '';
+            currentUser = user;
+            
+            // This logs the plaintext credentials to the network, which the hacker will sniff!
+            logNetworkEvent('POST', '/api/auth/login', `Attempted login. username=${user}&password=${pass}`);
+            
+            completeLogin(user);
+        }
+
+        function handleGmailLogin() {
+            currentUser = 'Gmail_User';
+            logNetworkEvent('POST', '/api/auth/google', `Login attempt via Google SSO.`);
+            completeLogin('Gmail User');
+        }
+
+        function completeLogin(name) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('dashboard-screen').style.display = 'block';
+            document.getElementById('lastLoginTime').innerText = new Date().toLocaleString();
+            document.getElementById('profileName').innerText = name;
+            showToast('Successfully signed in');
+            logNetworkEvent('GET', '/api/products', 'Fetched product catalog');
+        }
+
+        function handleLogout() {
+            logNetworkEvent('POST', '/api/auth/logout', 'User logged out');
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('dashboard-screen').style.display = 'none';
+            document.getElementById('usernameInput').value = '';
+            document.getElementById('passwordInput').value = '';
+            cart = []; updateCartUI();
+            currentUser = 'Guest';
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId + '-section').classList.add('active');
+            event.target.classList.add('active');
+
+            logNetworkEvent('GET', `/api/${tabId}`, `User navigated to ${tabId} page`);
+        }
+
+        function addToCart(name, price) {
+            cart.push({name, price});
+            updateCartUI();
+            logNetworkEvent('POST', '/api/cart/add', `Added ${name} to cart`);
+            showToast(`${name} added to cart`);
+        }
+
+        function updateCartUI() {
+            document.getElementById('cartCount').innerText = cart.length;
+            const container = document.getElementById('cartItems');
+            if (cart.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary)">Your cart is empty.</p>';
+                return;
+            }
+            let html = '';
+            let total = 0;
+            cart.forEach(item => {
+                html += `<div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
+                            <span>${item.name}</span>
+                            <strong>$${item.price}</strong>
+                         </div>`;
+                total += item.price;
+            });
+            html += `<div style="display: flex; justify-content: space-between; margin-top: 20px; font-size: 18px;">
+                        <strong>Total:</strong>
+                        <strong>$${total}</strong>
+                     </div>`;
+            container.innerHTML = html;
+        }
+
+        function checkout() {
+            if(cart.length === 0) { showToast("Cart is empty"); return; }
+            logNetworkEvent('POST', '/api/checkout', `Initiated checkout for ${cart.length} items`);
+            showToast("Redirecting to payment gateway...");
+            setTimeout(() => {
+                cart = [];
+                updateCartUI();
+                showToast("Payment successful!");
+                logNetworkEvent('POST', '/api/checkout/success', 'Payment processed');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
