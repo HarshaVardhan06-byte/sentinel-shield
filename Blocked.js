@@ -1,1 +1,0 @@
-// Blocked page frontend
